@@ -5,6 +5,7 @@ import com.cydeo.banksimulation.entity.Account;
 import com.cydeo.banksimulation.entity.Transaction;
 import com.cydeo.banksimulation.enums.AccountStatus;
 import com.cydeo.banksimulation.enums.AccountType;
+import com.cydeo.banksimulation.exception.BadRequestException;
 import com.cydeo.banksimulation.mapper.TransactionMapper;
 import com.cydeo.banksimulation.repository.TransactionRepository;
 import com.cydeo.banksimulation.service.impl.TransactionServiceImpl;
@@ -18,7 +19,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -50,9 +51,15 @@ public class TransactionServiceTest {
         assertNull(throwable);
     }
 
+    @Test
     public void should_throw_bad_request_exception_when_sender_account_is_null(){
         AccountDTO receiver = prepareAccountDTO(2L,new BigDecimal(150),AccountStatus.ACTIVE, true, 125L, AccountType.CHECKINGS);
-
+        Throwable throwable = catchThrowable(() -> transactionService.makeTransfer(BigDecimal.TEN
+                ,new Date(), null, receiver, "message"));
+        assertNotNull(throwable);
+        assertInstanceOf(BadRequestException.class, throwable);
+        BadRequestException badRequestException = (BadRequestException) throwable;
+        assertEquals("Sender or receiver can not be null", badRequestException.getMessage());
     }
 
 
