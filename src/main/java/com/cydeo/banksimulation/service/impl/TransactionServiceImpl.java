@@ -51,7 +51,6 @@ public class TransactionServiceImpl implements TransactionService {
         } else {
             throw new UnderConstructionException("Make transfer is not possible for now. Please try again later");
         }
-
     }
 
     public void checkAccountVerification(AccountDTO sender){
