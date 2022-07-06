@@ -6,7 +6,9 @@ import com.cydeo.banksimulation.entity.Transaction;
 import com.cydeo.banksimulation.enums.AccountStatus;
 import com.cydeo.banksimulation.enums.AccountType;
 import com.cydeo.banksimulation.exception.AccountNotVerifiedException;
+import com.cydeo.banksimulation.exception.AccountOwnerShipException;
 import com.cydeo.banksimulation.exception.BadRequestException;
+import com.cydeo.banksimulation.exception.BalanceNotSufficientException;
 import com.cydeo.banksimulation.mapper.TransactionMapper;
 import com.cydeo.banksimulation.repository.TransactionRepository;
 import com.cydeo.banksimulation.service.impl.TransactionServiceImpl;
@@ -138,6 +140,135 @@ public class TransactionServiceTest {
         AccountNotVerifiedException accountNotVerifiedException = (AccountNotVerifiedException) throwable;
         assertEquals("account not verified yet.", accountNotVerifiedException.getMessage());
     }
+
+    @Test
+    public void should_throw_account_ownership_exception_when_sender_account_is_saving_but_user_id_is_different(){
+        AccountDTO sender = prepareAccountDTO(2L,new BigDecimal(150)
+                ,AccountStatus.ACTIVE, true, 15L, AccountType.SAVINGS);
+        AccountDTO receiver = prepareAccountDTO(5L,new BigDecimal(150)
+                ,AccountStatus.ACTIVE, true, 16L, AccountType.CHECKINGS);
+
+        when(accountService.retrieveById(2L)).thenReturn(sender);
+        when(accountService.retrieveById(5L)).thenReturn(receiver);
+
+        Throwable throwable = catchThrowable(() -> transactionService.makeTransfer(BigDecimal.TEN
+                ,new Date(), sender, receiver, "message"));
+
+        assertNotNull(throwable);
+        assertInstanceOf(AccountOwnerShipException.class, throwable);
+        AccountOwnerShipException accountOwnerShipException = (AccountOwnerShipException) throwable;
+        assertEquals("When one of the account type is SAVINGS, sender and receiver has tobe same person"
+                , accountOwnerShipException.getMessage());
+    }
+
+    @Test
+    public void should_throw_account_ownership_exception_when_receiver_account_is_saving_but_user_id_is_different(){
+        AccountDTO sender = prepareAccountDTO(2L,new BigDecimal(150)
+                ,AccountStatus.ACTIVE, true, 15L, AccountType.CHECKINGS);
+        AccountDTO receiver = prepareAccountDTO(5L,new BigDecimal(150)
+                ,AccountStatus.ACTIVE, true, 16L, AccountType.SAVINGS);
+
+        when(accountService.retrieveById(2L)).thenReturn(sender);
+        when(accountService.retrieveById(5L)).thenReturn(receiver);
+
+        Throwable throwable = catchThrowable(() -> transactionService.makeTransfer(BigDecimal.TEN
+                ,new Date(), sender, receiver, "message"));
+
+        assertNotNull(throwable);
+        assertInstanceOf(AccountOwnerShipException.class, throwable);
+        AccountOwnerShipException accountOwnerShipException = (AccountOwnerShipException) throwable;
+        assertEquals("When one of the account type is SAVINGS, sender and receiver has tobe same person"
+                , accountOwnerShipException.getMessage());
+    }
+
+    @Test
+    public void should_throw_account_ownership_exception_when_both_account_are_saving_but_user_id_is_different(){
+        AccountDTO sender = prepareAccountDTO(2L,new BigDecimal(150)
+                ,AccountStatus.ACTIVE, true, 15L, AccountType.SAVINGS);
+        AccountDTO receiver = prepareAccountDTO(5L,new BigDecimal(150)
+                ,AccountStatus.ACTIVE, true, 16L, AccountType.SAVINGS);
+
+        when(accountService.retrieveById(2L)).thenReturn(sender);
+        when(accountService.retrieveById(5L)).thenReturn(receiver);
+
+        Throwable throwable = catchThrowable(() -> transactionService.makeTransfer(BigDecimal.TEN
+                ,new Date(), sender, receiver, "message"));
+
+        assertNotNull(throwable);
+        assertInstanceOf(AccountOwnerShipException.class, throwable);
+        AccountOwnerShipException accountOwnerShipException = (AccountOwnerShipException) throwable;
+        assertEquals("When one of the account type is SAVINGS, sender and receiver has tobe same person"
+                , accountOwnerShipException.getMessage());
+    }
+
+    @Test
+    public void should_make_transfer_when_both_account_are_saving_but_user_id_is_same(){
+        AccountDTO sender = prepareAccountDTO(2L,new BigDecimal(150)
+                ,AccountStatus.ACTIVE, true, 15L, AccountType.SAVINGS);
+        AccountDTO receiver = prepareAccountDTO(5L,new BigDecimal(150)
+                ,AccountStatus.ACTIVE, true, 15L, AccountType.SAVINGS);
+
+        when(accountService.retrieveById(2L)).thenReturn(sender);
+        when(accountService.retrieveById(5L)).thenReturn(receiver);
+
+        Throwable throwable = catchThrowable(() -> transactionService.makeTransfer(BigDecimal.TEN
+                ,new Date(), sender, receiver, "message"));
+        assertNull(throwable);
+    }
+
+    @Test
+    public void should_make_transfer_when_sender_account_is_saving_but_user_id_is_same(){
+        AccountDTO sender = prepareAccountDTO(2L,new BigDecimal(150)
+                ,AccountStatus.ACTIVE, true, 15L, AccountType.SAVINGS);
+        AccountDTO receiver = prepareAccountDTO(5L,new BigDecimal(150)
+                ,AccountStatus.ACTIVE, true, 15L, AccountType.CHECKINGS);
+
+        when(accountService.retrieveById(2L)).thenReturn(sender);
+        when(accountService.retrieveById(5L)).thenReturn(receiver);
+
+        Throwable throwable = catchThrowable(() -> transactionService.makeTransfer(BigDecimal.TEN
+                ,new Date(), sender, receiver, "message"));
+        assertNull(throwable);
+    }
+
+    @Test
+    public void should_make_transfer_when_receiver_account_is_saving_but_user_id_is_same(){
+        AccountDTO sender = prepareAccountDTO(2L,new BigDecimal(150)
+                ,AccountStatus.ACTIVE, true, 15L, AccountType.CHECKINGS);
+        AccountDTO receiver = prepareAccountDTO(5L,new BigDecimal(150)
+                ,AccountStatus.ACTIVE, true, 15L, AccountType.SAVINGS);
+
+        when(accountService.retrieveById(2L)).thenReturn(sender);
+        when(accountService.retrieveById(5L)).thenReturn(receiver);
+
+        Throwable throwable = catchThrowable(() -> transactionService.makeTransfer(BigDecimal.TEN
+                ,new Date(), sender, receiver, "message"));
+        assertNull(throwable);
+    }
+
+    @Test
+    public void should_throw_balance_not_sufficient_exception_when_sender_balance_is_not_enough(){
+        AccountDTO sender = prepareAccountDTO(2L,new BigDecimal(5)
+                ,AccountStatus.ACTIVE, true, 15L, AccountType.CHECKINGS);
+        AccountDTO receiver = prepareAccountDTO(5L,new BigDecimal(150)
+                ,AccountStatus.ACTIVE, true, 15L, AccountType.SAVINGS);
+
+        when(accountService.retrieveById(2L)).thenReturn(sender);
+        when(accountService.retrieveById(5L)).thenReturn(receiver);
+
+        Throwable throwable = catchThrowable(() -> transactionService.makeTransfer(BigDecimal.TEN
+                ,new Date(), sender, receiver, "message"));
+
+        assertNotNull(throwable);
+        assertInstanceOf(BalanceNotSufficientException.class, throwable);
+        BalanceNotSufficientException balanceNotSufficientException = (BalanceNotSufficientException) throwable;
+        assertEquals("Balance is not enough for this transaction"
+                , balanceNotSufficientException.getMessage());
+
+    }
+
+
+
 
 
     private AccountDTO prepareAccountDTO(Long id, BigDecimal balance,
