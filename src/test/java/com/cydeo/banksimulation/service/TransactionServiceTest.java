@@ -124,6 +124,21 @@ public class TransactionServiceTest {
         assertEquals("account not verified yet.", accountNotVerifiedException.getMessage());
     }
 
+    @Test
+    public void should_throw_account_not_verified_exception_receiver_account_is_not_verified(){
+        AccountDTO sender = prepareAccountDTO(2L,new BigDecimal(150),AccountStatus.ACTIVE, true, 125L, AccountType.CHECKINGS);
+        AccountDTO receiver = prepareAccountDTO(5L,new BigDecimal(150),AccountStatus.ACTIVE, false, 125L, AccountType.CHECKINGS);
+        when(accountService.retrieveById(2L)).thenReturn(sender);
+        when(accountService.retrieveById(5L)).thenReturn(receiver);
+
+        Throwable throwable = catchThrowable(() -> transactionService.makeTransfer(BigDecimal.TEN
+                ,new Date(), sender, receiver, "message"));
+        assertNotNull(throwable);
+        assertInstanceOf(AccountNotVerifiedException.class, throwable);
+        AccountNotVerifiedException accountNotVerifiedException = (AccountNotVerifiedException) throwable;
+        assertEquals("account not verified yet.", accountNotVerifiedException.getMessage());
+    }
+
 
     private AccountDTO prepareAccountDTO(Long id, BigDecimal balance,
                                          AccountStatus accountStatus,
