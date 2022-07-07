@@ -53,6 +53,7 @@ public class AccountServiceImpl implements AccountService {
         accountDTO.setCreationDate(new Date());
         accountDTO.setAccountStatus(AccountStatus.ACTIVE);
         Account account = accountMapper.convertToEntity(accountDTO);
+        account.setOtpVerified(false);
         account = accountRepository.save(account);
         return otpService.createOtpSendSms(account);
     }

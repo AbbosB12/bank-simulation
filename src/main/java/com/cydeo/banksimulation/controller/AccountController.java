@@ -16,7 +16,7 @@ import javax.validation.Valid;
 import java.util.List;
 
 @Controller
-@RequestMapping("/v1/account")
+@RequestMapping(value = "/v1/account")
 public class AccountController {
 
     private final AccountService accountService;
