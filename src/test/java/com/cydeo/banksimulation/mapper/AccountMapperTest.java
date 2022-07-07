@@ -64,10 +64,10 @@ public class AccountMapperTest {
     }
 
     private Account prepareAccount(Long id, BigDecimal balance,
-                                         AccountStatus accountStatus,
-                                         boolean verified,
-                                         Long userId,
-                                         AccountType accountType){
+                                   AccountStatus accountStatus,
+                                   boolean verified,
+                                   Long userId,
+                                   AccountType accountType){
         Account account = new Account();
         account.setId(id);
         account.setBalance(balance);
