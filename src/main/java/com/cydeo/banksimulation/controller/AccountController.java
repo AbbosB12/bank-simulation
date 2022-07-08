@@ -26,8 +26,9 @@ public class AccountController {
     }
 
     @GetMapping
-    public List<AccountDTO> accountList() {
-        return accountService.listAllAccount();
+    public ResponseEntity<ResponseWrapper> accountList() {
+        List<AccountDTO> accountDTOS = accountService.listAllAccount();
+        return ResponseEntity.ok(new ResponseWrapper("Accounts are successfully retrieved",accountDTOS , HttpStatus.OK));
     }
 
     @PostMapping
@@ -37,10 +38,11 @@ public class AccountController {
 
     }
 
-    @GetMapping("/delete/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<ResponseWrapper> deleteUser(@PathVariable("id") Long id) {
         accountService.deleteAccount(id);
         return ResponseEntity.ok(new ResponseWrapper("Account is successfully deleted", HttpStatus.OK));
     }
+
 
 }

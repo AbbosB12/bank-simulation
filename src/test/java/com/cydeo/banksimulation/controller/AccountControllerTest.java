@@ -26,7 +26,7 @@ public class AccountControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    // break till 40
+
     @Test
     public void should_create_account() throws Exception {
         AccountDTO accountDTO = new AccountDTO();
