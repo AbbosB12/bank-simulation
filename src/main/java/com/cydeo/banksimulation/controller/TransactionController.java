@@ -1,7 +1,7 @@
 package com.cydeo.banksimulation.controller;
 
-import com.cydeo.banksimulation.model.Account;
-import com.cydeo.banksimulation.model.Transaction;
+import com.cydeo.banksimulation.dto.AccountDTO;
+import com.cydeo.banksimulation.dto.TransactionDTO;
 import com.cydeo.banksimulation.service.AccountService;
 import com.cydeo.banksimulation.service.TransactionService;
 import org.springframework.stereotype.Controller;
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import javax.validation.Valid;
 import java.util.Date;
-import java.util.UUID;
 
 @Controller
 public class TransactionController {
@@ -27,38 +26,36 @@ public class TransactionController {
         this.transactionService = transactionService;
     }
 
-
     @GetMapping("/make-transfer")
-    public String retrieveTransactionForm(Model model){
-        model.addAttribute("accounts", accountService.listAllAccount());
-        model.addAttribute("transaction", Transaction.builder().build());
-        model.addAttribute("lastTransactionList", transactionService.retrieveLastTransaction());
+    public String retrieveTransactionForm(Model model) {
+
+        model.addAttribute("accounts", accountService.listAllActiveAccount());
+        model.addAttribute("transactionDTO", new TransactionDTO());
+        model.addAttribute("lastTransactionList", transactionService.retrieveLastTransactions());
 
         return "transaction/make-transfer";
 
     }
 
-
     @PostMapping("/transfer")
-    public String makeTransfer(@Valid @ModelAttribute("transaction")Transaction transaction, BindingResult bindingResult, Model model){
+    public String makeTransfer(@Valid @ModelAttribute("transactionDTO") TransactionDTO transactionDTO, BindingResult bindingResult, Model model) {
 
-        if(bindingResult.hasErrors()){
+        if (bindingResult.hasErrors()) {
             model.addAttribute("accounts", accountService.listAllAccount());
             return "transaction/make-transfer";
         }
 
-        Account reciever = accountService.retriveById(transaction.getReceiver());
-        Account sender = accountService.retriveById(transaction.getSender());
-        transactionService.makeTransfer(transaction.getAmount(),new Date(),sender,reciever,transaction.getMessage());
+        AccountDTO reciever = transactionDTO.getReceiver();
+        AccountDTO sender = transactionDTO.getSender();
+        transactionService.makeTransfer(transactionDTO.getAmount(), new Date(), sender, reciever, transactionDTO.getMessage());
         return "redirect:/make-transfer";
 
     }
 
     @GetMapping("/transaction/{id}")
-    public String transactionDetailById(@PathVariable("id")UUID id, Model model) {
-
-        model.addAttribute("transactionList", transactionService.findTransactionListById(id));
-
+    public String transactionDetailById(@PathVariable("id") Long id, Model model) {
+        model.addAttribute("transactionList", transactionService.findTransactionListByAccountId(id));
         return "transaction/transactions";
     }
+
 }
