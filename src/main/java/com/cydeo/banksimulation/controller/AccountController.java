@@ -56,6 +56,7 @@ public class AccountController {
         accountService.deleteAccount(id);
         return "redirect:/index";
 
+
     }
 
 
